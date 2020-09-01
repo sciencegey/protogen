@@ -5,6 +5,10 @@
 #include "nose.h"
 
 //import libraries
+#include <Wire.h>
+#include "Adafruit_MCP23017.h"
+Adafruit_MCP23017 io;
+
 #include <ESP32-RGB64x32MatrixPanel-I2S-DMA.h>
 RGB64x32MatrixPanel_I2S_DMA matrix;
 
@@ -29,22 +33,22 @@ RGB64x32MatrixPanel_I2S_DMA matrix;
 
 #define CLK_PIN 5
 
-
 //define the input pins
-#define noseSensor  7
+//all input pins come through MCP23017, pin definitions at https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library
+#define noseSensor  15
 
 //finger switches
-#define leftPinkie  53
-#define leftRing    52
-#define leftMiddle  51
-#define leftIndex   50
-#define leftThumb   49
+#define leftPinkie  0
+#define leftRing    1
+#define leftMiddle  2
+#define leftIndex   3
+#define leftThumb   4
 
-#define rightThumb  48
-#define rightIndex  47
-#define rightMiddle 46
-#define rightRing   45
-#define rightPinkie 44
+#define rightThumb  12
+#define rightIndex  11
+#define rightMiddle 10
+#define rightRing   9
+#define rightPinkie 8
 
 
 //global variables
@@ -73,21 +77,22 @@ float idleB = 7;  //blue value of the idle image
 
 void setup() {
   Serial.begin(115200);
-  /*
-  pinMode(noseSensor, INPUT_PULLDOWN); //nose sensor - pulled low and goes high when booped
+  io.begin();
+
+  io.pinMode(noseSensor, INPUT_PULLDOWN); //nose sensor - pulled low and goes high when booped
 
   //pin setup for finger switches. Using pulldown, so goes HIGH when button is pressed
-  pinMode(leftPinkie, INPUT_PULLDOWN);
-  pinMode(leftRing, INPUT_PULLDOWN);
-  pinMode(leftMiddle, INPUT_PULLDOWN);
-  pinMode(leftIndex, INPUT_PULLDOWN);
-  pinMode(leftThumb, INPUT_PULLDOWN);
-  pinMode(rightThumb, INPUT_PULLDOWN);
-  pinMode(rightIndex, INPUT_PULLDOWN);
-  pinMode(rightMiddle, INPUT_PULLDOWN);
-  pinMode(rightRing, INPUT_PULLDOWN);
-  pinMode(rightPinkie, INPUT_PULLDOWN);
-  */
+  io.pinMode(leftPinkie, INPUT);
+  io.pinMode(leftRing, INPUT);
+  io.pinMode(leftMiddle, INPUT);
+  io.pinMode(leftIndex, INPUT);
+  io.pinMode(leftThumb, INPUT);
+  io.pinMode(rightThumb, INPUT);
+  io.pinMode(rightIndex, INPUT);
+  io.pinMode(rightMiddle, INPUT);
+  io.pinMode(rightRing, INPUT);
+  io.pinMode(rightPinkie, INPUT);
+
   //starts the matrix and writes all black to it
   matrix.begin(R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN);
   
@@ -108,15 +113,15 @@ void loop() {
     blinkTime = random(1,15)*1000;
   }
 
-  /*if(digitalRead(noseSensor) == HIGH){
+  if(digitalRead(noseSensor) == HIGH){
     idling = false;
     boop();
     startTime = millis();
     blinkTime = random(1,15)*1000;
-  }*/
-  if(digitalRead(leftPinkie) == LOW){
+  }
+  if(io.digitalRead(leftPinkie) == HIGH){
     
-  } else if(digitalRead(leftRing) == LOW){
+  } else if(io.digitalRead(leftRing) == HIGH){
     //suprise
     idling = false;
     currentExpression = 5;
@@ -125,7 +130,7 @@ void loop() {
     matrix.drawBitmap(0,0, mouthSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(digitalRead(leftMiddle) == LOW){
+  } else if(io.digitalRead(leftMiddle) == HIGH){
     //sad
     idling = false;
     currentExpression = 4;
@@ -134,7 +139,7 @@ void loop() {
     matrix.drawBitmap(0,0, mouthSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(digitalRead(leftIndex) == LOW){
+  } else if(io.digitalRead(leftIndex) == HIGH){
     //angry
     idling = false;
     currentExpression = 3;
@@ -143,13 +148,13 @@ void loop() {
     matrix.drawBitmap(0,0, mouthAngry, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeAngry, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(digitalRead(leftThumb) == LOW){
+  } else if(io.digitalRead(leftThumb) == HIGH){
     
-  } else if(digitalRead(rightThumb) == LOW){
+  } else if(io.digitalRead(rightThumb) == HIGH){
     //blink enable
     blinkEnable = !blinkEnable;
     delay(500);
-  } else if(digitalRead(rightIndex) == LOW){
+  } else if(io.digitalRead(rightIndex) == HIGH){
     //neutral
     idling = false;
     currentExpression = 0;
@@ -158,7 +163,7 @@ void loop() {
     matrix.drawBitmap(0,0, mouthNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(digitalRead(rightMiddle) == LOW){
+  } else if(io.digitalRead(rightMiddle) == HIGH){
     //happy
     idling = false;
     currentExpression = 1;
@@ -167,7 +172,7 @@ void loop() {
     matrix.drawBitmap(0,0, mouthHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(digitalRead(rightRing) == LOW){
+  } else if(io.digitalRead(rightRing) == HIGH){
     //love
     idling = false;
     currentExpression = 2;
@@ -176,7 +181,7 @@ void loop() {
     matrix.drawBitmap(0,0, mouthHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeHeart, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(digitalRead(rightPinkie) == LOW){
+  } else if(io.digitalRead(rightPinkie) == HIGH){
     //idle
     idling = true;
     delay(500);
