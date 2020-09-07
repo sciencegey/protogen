@@ -9,6 +9,12 @@
 #include "Adafruit_MCP23017.h"
 Adafruit_MCP23017 io;
 
+#include <Adafruit_SSD1306.h>
+#define OLED_WIDTH  128 // OLED display width, in pixels
+#define OLED_HEIGHT 32 // OLED display height, in pixels
+#define OLED_RESET  13 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 oled(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RESET);
+
 #include <ESP32-RGB64x32MatrixPanel-I2S-DMA.h>
 RGB64x32MatrixPanel_I2S_DMA matrix;
 
@@ -79,19 +85,44 @@ void setup() {
   Serial.begin(115200);
   io.begin();
 
-  io.pinMode(noseSensor, INPUT_PULLDOWN); //nose sensor - pulled low and goes high when booped
+  io.pinMode(noseSensor, INPUT); //nose sensor - pulled low and goes high when booped
 
-  //pin setup for finger switches. Using pulldown, so goes HIGH when button is pressed
+  //pin setup for finger switches. Using pullup, so goes LOW when button is pressed
   io.pinMode(leftPinkie, INPUT);
+  io.pullUp(leftPinkie, HIGH);
   io.pinMode(leftRing, INPUT);
+  io.pullUp(leftRing, HIGH);
   io.pinMode(leftMiddle, INPUT);
+  io.pullUp(leftMiddle, HIGH);
   io.pinMode(leftIndex, INPUT);
+  io.pullUp(leftIndex, HIGH);
   io.pinMode(leftThumb, INPUT);
+  io.pullUp(leftThumb, HIGH);
   io.pinMode(rightThumb, INPUT);
+  io.pullUp(rightThumb, HIGH);
   io.pinMode(rightIndex, INPUT);
+  io.pullUp(rightIndex, HIGH);
   io.pinMode(rightMiddle, INPUT);
+  io.pullUp(rightMiddle, HIGH);
   io.pinMode(rightRing, INPUT);
+  io.pullUp(rightRing, HIGH);
   io.pinMode(rightPinkie, INPUT);
+  io.pullUp(rightPinkie, HIGH);
+
+  //OLED screen
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+
+  // Show initial display buffer contents on the screen --
+  // the library initializes this with an Adafruit splash screen.
+  oled.display();
+  delay(2000); // Pause for 2 seconds
+
+  // Clear the buffer
+  oled.clearDisplay();
 
   //starts the matrix and writes all black to it
   matrix.begin(R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN);
@@ -113,16 +144,19 @@ void loop() {
     blinkTime = random(1,15)*1000;
   }
 
-  if(digitalRead(noseSensor) == HIGH){
+  if(io.digitalRead(noseSensor) == HIGH){
+    oledText(0,0,"Booped");
     idling = false;
     boop();
     startTime = millis();
     blinkTime = random(1,15)*1000;
   }
-  if(io.digitalRead(leftPinkie) == HIGH){
-    
-  } else if(io.digitalRead(leftRing) == HIGH){
+  
+  if(io.digitalRead(leftPinkie) == LOW){
+    oledText(0,0,"LEFTPINKIE");
+  } else if(io.digitalRead(leftRing) == LOW){
     //suprise
+    oledText(0,0,"Suprise");
     idling = false;
     currentExpression = 5;
     matrix.fillScreen(matrix.Color333(0, 0, 0));
@@ -130,8 +164,9 @@ void loop() {
     matrix.drawBitmap(0,0, mouthSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(io.digitalRead(leftMiddle) == HIGH){
+  } else if(io.digitalRead(leftMiddle) == LOW){
     //sad
+    oledText(0,0,"Sad");
     idling = false;
     currentExpression = 4;
     matrix.fillScreen(matrix.Color333(0, 0, 0));
@@ -139,8 +174,9 @@ void loop() {
     matrix.drawBitmap(0,0, mouthSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(io.digitalRead(leftIndex) == HIGH){
+  } else if(io.digitalRead(leftIndex) == LOW){
     //angry
+    oledText(0,0,"Angry");
     idling = false;
     currentExpression = 3;
     matrix.fillScreen(matrix.Color333(0, 0, 0));
@@ -148,14 +184,15 @@ void loop() {
     matrix.drawBitmap(0,0, mouthAngry, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeAngry, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(io.digitalRead(leftThumb) == HIGH){
+  } else if(io.digitalRead(leftThumb) == LOW){
     
-  } else if(io.digitalRead(rightThumb) == HIGH){
+  } else if(io.digitalRead(rightThumb) == LOW){
     //blink enable
     blinkEnable = !blinkEnable;
     delay(500);
-  } else if(io.digitalRead(rightIndex) == HIGH){
+  } else if(io.digitalRead(rightIndex) == LOW){
     //neutral
+    oledText(0,0,"Neutral");
     idling = false;
     currentExpression = 0;
     matrix.fillScreen(matrix.Color333(0, 0, 0));
@@ -163,8 +200,9 @@ void loop() {
     matrix.drawBitmap(0,0, mouthNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(io.digitalRead(rightMiddle) == HIGH){
+  } else if(io.digitalRead(rightMiddle) == LOW){
     //happy
+    oledText(0,0,"Happy");
     idling = false;
     currentExpression = 1;
     matrix.fillScreen(matrix.Color333(0, 0, 0));
@@ -172,8 +210,9 @@ void loop() {
     matrix.drawBitmap(0,0, mouthHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(io.digitalRead(rightRing) == HIGH){
+  } else if(io.digitalRead(rightRing) == LOW){
     //love
+    oledText(0,0,"Love");
     idling = false;
     currentExpression = 2;
     matrix.fillScreen(matrix.Color333(0, 0, 0));
@@ -181,8 +220,9 @@ void loop() {
     matrix.drawBitmap(0,0, mouthHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
     matrix.drawBitmap(0,0, eyeHeart, 64, 32, matrix.Color333(faceR, faceG, faceB));
     delay(500);
-  } else if(io.digitalRead(rightPinkie) == HIGH){
+  } else if(io.digitalRead(rightPinkie) == LOW){
     //idle
+    oledText(0,0,"Idle");
     idling = true;
     delay(500);
   }
@@ -283,4 +323,15 @@ void blink(){
   delay(20);
   matrix.drawBitmap(0, 0, eyeNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
   delay(20);
+}
+
+void oledText(int x, int y, String inText){
+  oled.clearDisplay(); //first make sure the screen is blank
+
+  oled.setTextSize(1);             // Normal 1:1 pixel scale
+  oled.setTextColor(SSD1306_WHITE);        // Draw white text
+  oled.setCursor(x,y);
+  oled.println(inText);
+
+  oled.display();
 }
