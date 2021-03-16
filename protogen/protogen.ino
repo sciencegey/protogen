@@ -56,12 +56,14 @@ RGB64x32MatrixPanel_I2S_DMA matrix;
 #define rightRing   9
 #define rightPinkie 8
 
+#define batIn 35
 
 //global variables
 unsigned long startTime = 0;  //current tick
 int blinkTime = 0;  //how long until the next blink
 bool blinkEnable = true;
 int currentExpression = 0;  //which expression we are currrently in. 0=neutral, 1=happy, 2=love, 3=angry, 4=sad, 5=suprise
+int batVolt = 0;  //current battery voltage
 
 //current face colour
 int faceR = 0;
@@ -128,106 +130,12 @@ void setup() {
   matrix.begin(R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN);
   
   matrix.fillScreen(matrix.Color333(0, 0, 0));  
-  matrix.drawBitmap(0,0, noseNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-  matrix.drawBitmap(0,0, mouthNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-  matrix.drawBitmap(0, 0, eyeNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0,0, noseNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0,0, mouthNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
 
   startTime = millis();
   blinkTime = random(1,15)*1000;
-}
-
-void loop() {
-
-  if(currentExpression == 0 && blinkEnable && millis() >= startTime+blinkTime){
-    blink();
-    startTime = millis();
-    blinkTime = random(1,15)*1000;
-  }
-
-  if(io.digitalRead(noseSensor) == HIGH){
-    oledText(0,0,"Booped");
-    idling = false;
-    boop();
-    startTime = millis();
-    blinkTime = random(1,15)*1000;
-  }
-  
-  if(io.digitalRead(leftPinkie) == LOW){
-    oledText(0,0,"LEFTPINKIE");
-  } else if(io.digitalRead(leftRing) == LOW){
-    //suprise
-    oledText(0,0,"Suprise");
-    idling = false;
-    currentExpression = 5;
-    matrix.fillScreen(matrix.Color333(0, 0, 0));
-    matrix.drawBitmap(0,0, noseSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, mouthSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, eyeSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    delay(500);
-  } else if(io.digitalRead(leftMiddle) == LOW){
-    //sad
-    oledText(0,0,"Sad");
-    idling = false;
-    currentExpression = 4;
-    matrix.fillScreen(matrix.Color333(0, 0, 0));
-    matrix.drawBitmap(0,0, noseSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, mouthSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, eyeSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    delay(500);
-  } else if(io.digitalRead(leftIndex) == LOW){
-    //angry
-    oledText(0,0,"Angry");
-    idling = false;
-    currentExpression = 3;
-    matrix.fillScreen(matrix.Color333(0, 0, 0));
-    matrix.drawBitmap(0,0, noseSad, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, mouthAngry, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, eyeAngry, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    delay(500);
-  } else if(io.digitalRead(leftThumb) == LOW){
-    
-  } else if(io.digitalRead(rightThumb) == LOW){
-    //blink enable
-    blinkEnable = !blinkEnable;
-    delay(500);
-  } else if(io.digitalRead(rightIndex) == LOW){
-    //neutral
-    oledText(0,0,"Neutral");
-    idling = false;
-    currentExpression = 0;
-    matrix.fillScreen(matrix.Color333(0, 0, 0));
-    matrix.drawBitmap(0,0, noseNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, mouthNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, eyeNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    delay(500);
-  } else if(io.digitalRead(rightMiddle) == LOW){
-    //happy
-    oledText(0,0,"Happy");
-    idling = false;
-    currentExpression = 1;
-    matrix.fillScreen(matrix.Color333(0, 0, 0));
-    matrix.drawBitmap(0,0, noseNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, mouthHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, eyeHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    delay(500);
-  } else if(io.digitalRead(rightRing) == LOW){
-    //love
-    oledText(0,0,"Love");
-    idling = false;
-    currentExpression = 2;
-    matrix.fillScreen(matrix.Color333(0, 0, 0));
-    matrix.drawBitmap(0,0, noseNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, mouthHappy, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    matrix.drawBitmap(0,0, eyeHeart, 64, 32, matrix.Color333(faceR, faceG, faceB));
-    delay(500);
-  } else if(io.digitalRead(rightPinkie) == LOW){
-    //idle
-    oledText(0,0,"Idle");
-    idling = true;
-    delay(500);
-  }
-
-  if(idling == true){idle();}
 }
 
 //idle animation
@@ -290,16 +198,16 @@ void idle(){
 void boop(){
   matrix.fillScreen(matrix.Color333(0, 0, 0));  //blank the screen
   //then draw the suprised bitmaps
-  matrix.drawBitmap(0, 0, eyeSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
-  matrix.drawBitmap(0, 0, noseSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
-  matrix.drawBitmap(0, 0, mouthSuprise, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeSuprise, 128, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, noseSuprise, 128, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, mouthSuprise, 128, 32, matrix.Color333(faceR, faceG, faceB));
   //wait a few seconds
   delay(2000);
   //then switch back to the neutral expression
   matrix.fillScreen(matrix.Color333(0, 0, 0));  
-  matrix.drawBitmap(0, 0, noseNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-  matrix.drawBitmap(0, 0, mouthNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
-  matrix.drawBitmap(0, 0, eyeNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, noseNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, mouthNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
 }
 
 void blink(){
@@ -313,15 +221,15 @@ void blink(){
   delay(20);
   matrix.fillRect(0,0,26,10,matrix.Color333(0,0,0));
   delay(50);
-  matrix.drawBitmap(0, 0, eyeNeutral4, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeNeutral4, 128, 32, matrix.Color333(faceR, faceG, faceB));
   delay(20);
-  matrix.drawBitmap(0, 0, eyeNeutral3, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeNeutral3, 128, 32, matrix.Color333(faceR, faceG, faceB));
   delay(20);
-  matrix.drawBitmap(0, 0, eyeNeutral2, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeNeutral2, 128, 32, matrix.Color333(faceR, faceG, faceB));
   delay(20);
-  matrix.drawBitmap(0, 0, eyeNeutral1, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeNeutral1, 128, 32, matrix.Color333(faceR, faceG, faceB));
   delay(20);
-  matrix.drawBitmap(0, 0, eyeNeutral, 64, 32, matrix.Color333(faceR, faceG, faceB));
+  matrix.drawBitmap(0, 0, eyeNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
   delay(20);
 }
 
@@ -334,4 +242,100 @@ void oledText(int x, int y, String inText){
   oled.println(inText);
 
   oled.display();
+}
+
+void loop() {
+  //read current battery voltage
+  //batVolt = ((analogRead(35)/4095)*2);
+  
+  if(currentExpression == 0 && blinkEnable && millis() >= startTime+blinkTime){
+    blink();
+    startTime = millis();
+    blinkTime = random(1,15)*1000;
+  }
+
+  if(io.digitalRead(noseSensor) == HIGH){
+    oledText(0,0,"Booped");
+    idling = false;
+    boop();
+    startTime = millis();
+    blinkTime = random(1,15)*1000;
+  }
+  
+  if(io.digitalRead(leftPinkie) == LOW){
+    oledText(0,0,"LEFTPINKIE");
+  } else if(io.digitalRead(leftRing) == LOW){
+    //suprise
+    oledText(0,0,"Suprise");
+    idling = false;
+    currentExpression = 5;
+    matrix.fillScreen(matrix.Color333(0, 0, 0));
+    matrix.drawBitmap(0,0, noseSuprise, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, mouthSuprise, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, eyeSuprise, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    delay(500);
+  } else if(io.digitalRead(leftMiddle) == LOW){
+    //sad
+    oledText(0,0,"Sad");
+    idling = false;
+    currentExpression = 4;
+    matrix.fillScreen(matrix.Color333(0, 0, 0));
+    matrix.drawBitmap(0,0, noseSad, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, mouthSad, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, eyeSad, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    delay(500);
+  } else if(io.digitalRead(leftIndex) == LOW){
+    //angry
+    oledText(0,0,"Angry");
+    idling = false;
+    currentExpression = 3;
+    matrix.fillScreen(matrix.Color333(0, 0, 0));
+    matrix.drawBitmap(0,0, noseSad, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, mouthAngry, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, eyeAngry, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    delay(500);
+  } else if(io.digitalRead(leftThumb) == LOW){
+    
+  } else if(io.digitalRead(rightThumb) == LOW){
+    //blink enable
+    blinkEnable = !blinkEnable;
+    delay(500);
+  } else if(io.digitalRead(rightIndex) == LOW){
+    //neutral
+    oledText(0,0,"Neutral");
+    idling = false;
+    currentExpression = 0;
+    matrix.fillScreen(matrix.Color333(0, 0, 0));
+    matrix.drawBitmap(0,0, noseNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, mouthNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, eyeNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    delay(500);
+  } else if(io.digitalRead(rightMiddle) == LOW){
+    //happy
+    oledText(0,0,"Happy");
+    idling = false;
+    currentExpression = 1;
+    matrix.fillScreen(matrix.Color333(0, 0, 0));
+    matrix.drawBitmap(0,0, noseNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, mouthHappy, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, eyeHappy, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    delay(500);
+  } else if(io.digitalRead(rightRing) == LOW){
+    //love
+    oledText(0,0,"Love");
+    idling = false;
+    currentExpression = 2;
+    matrix.fillScreen(matrix.Color333(0, 0, 0));
+    matrix.drawBitmap(0,0, noseNeutral, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, mouthHappy, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    matrix.drawBitmap(0,0, eyeHeart, 128, 32, matrix.Color333(faceR, faceG, faceB));
+    delay(500);
+  } else if(io.digitalRead(rightPinkie) == LOW){
+    //idle
+    oledText(0,0,"Idle");
+    idling = true;
+    delay(500);
+  }
+
+  if(idling == true){idle();}
 }
